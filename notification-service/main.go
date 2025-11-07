@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/smartbot/notification/api"
+	"github.com/smartbot/notification/database"
 	"github.com/smartbot/notification/pkg/config"
 	"github.com/smartbot/notification/pkg/dbclient"
 )
@@ -19,7 +20,7 @@ func main() {
 		return
 	}
 
-	// err = db.AutoMigrate(&database.Product{}, &database.Category{}, &database.ProductImages{})
+	err = db.AutoMigrate(&database.Notification{})
 
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
