@@ -20,6 +20,7 @@ func (ns *NotificationService) SendNotification(req SendNotificationRequest) (*S
 	db := dbclient.GetCient()
 
 	newNotif := database.Notification{
+		ID:      uuid.New(),
 		UserID:  req.SenderID, // req.SenderID,
 		Channel: req.Channel,
 		Status:  database.NotificationSending,
@@ -30,8 +31,6 @@ func (ns *NotificationService) SendNotification(req SendNotificationRequest) (*S
 		log.Fatal("Failed to create notif", result.Error.Error())
 		return nil, errors.InternalServerError("Failed to create product")
 	}
-
-	log.Fatal("created", newNotif.ID.String())
 
 	return &SendNotificationResponse{NotificationID: newNotif.ID}, nil
 
