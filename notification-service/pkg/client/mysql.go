@@ -40,15 +40,13 @@ func (client *MySQLClient) GetDatabase() *gorm.DB {
 
 }
 
-var client *MySQLClient
+var mysqlClient *MySQLClient
 
 func GetMySQLCient() *MySQLClient {
-
-	if client != nil {
-		return client
+	if mysqlClient == nil {
+		mysqlClient = &MySQLClient{
+			DB: nil,
+		}
 	}
-	client = &MySQLClient{
-		DB: nil,
-	}
-	return client
+	return mysqlClient
 }
