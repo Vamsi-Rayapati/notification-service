@@ -2,6 +2,7 @@ package notification
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/google/uuid"
@@ -19,15 +20,20 @@ type NotificationService struct {
 }
 
 func (ns *NotificationService) SendNotification(req SendNotificationRequest) (*SendNotificationResponse, *errors.ApiError) {
-
+	notificationID := uuid.New()
 	kafkaClient := client.GetKafkaClient()
-	writer := kafkaClient.GetWriter()
+	writer := kafkaClient.GetWriter("email-notifications")
 	defer writer.Close()
 
-	err := writer.WriteMessages(context.Background(),
+	bytePayload, err := json.Marshal(req.Payload)
+	if err != nil {
+		return nil, errors.InternalServerError("Failed to parse payload")
+	}
+
+	err = writer.WriteMessages(context.Background(),
 		kafka.Message{
-			Key:   []byte("key-A"),
-			Value: []byte("Hello from Go!"),
+			Key:   []byte(notificationID.String()),
+			Value: bytePayload,
 		},
 	)
 
@@ -39,7 +45,7 @@ func (ns *NotificationService) SendNotification(req SendNotificationRequest) (*S
 	db := client.GetMySQLCient().GetDatabase()
 
 	newNotif := database.Notification{
-		ID:      uuid.New(),
+		ID:      notificationID,
 		UserID:  req.SenderID, // req.SenderID,
 		Channel: req.Channel,
 		Status:  database.NotificationSending,

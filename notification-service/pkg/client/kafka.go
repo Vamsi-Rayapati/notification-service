@@ -10,10 +10,10 @@ import (
 type KafkaClient struct {
 }
 
-func (client *KafkaClient) GetWriter() *kafka.Writer {
+func (client *KafkaClient) GetWriter(topic string) *kafka.Writer {
 	writer := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: []string{"kafka:9092"},
-		Topic:   "test-topic",
+		Topic:   topic,
 	})
 
 	return writer
