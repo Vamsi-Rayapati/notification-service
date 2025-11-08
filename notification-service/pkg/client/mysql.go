@@ -1,4 +1,4 @@
-package dbclient
+package client
 
 import (
 	"fmt"
@@ -9,10 +9,14 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+type MySQLClient struct {
+	DB *gorm.DB
+}
+
+// var DB *gorm.DB
 
 // ConnectDB initializes the database connection
-func Connect() (*gorm.DB, error) {
+func (client *MySQLClient) Connect() (*gorm.DB, error) {
 	var err error
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.Config.DbUserName,
@@ -22,15 +26,29 @@ func Connect() (*gorm.DB, error) {
 		"notification",
 	)
 
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	client.DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 		return nil, err
 	}
 	log.Println("Database connection successful!")
-	return DB, nil
+	return client.DB, nil
 }
 
-func GetCient() *gorm.DB {
-	return DB
+func (client *MySQLClient) GetDatabase() *gorm.DB {
+	return client.DB
+
+}
+
+var client *MySQLClient
+
+func GetMySQLCient() *MySQLClient {
+
+	if client != nil {
+		return client
+	}
+	client = &MySQLClient{
+		DB: nil,
+	}
+	return client
 }

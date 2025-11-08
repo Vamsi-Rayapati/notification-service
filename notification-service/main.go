@@ -6,15 +6,16 @@ import (
 
 	"github.com/smartbot/notification/api"
 	"github.com/smartbot/notification/database"
+	"github.com/smartbot/notification/pkg/client"
 	"github.com/smartbot/notification/pkg/config"
-	"github.com/smartbot/notification/pkg/dbclient"
 )
 
 func main() {
 	var err error
 	config.LoadConfig()
 
-	db, err := dbclient.Connect()
+	mysql := client.GetMySQLCient()
+	db, err := mysql.Connect()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v, %v", err, db)
 		return

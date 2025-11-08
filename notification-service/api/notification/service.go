@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/smartbot/notification/database"
-	"github.com/smartbot/notification/pkg/dbclient"
+	"github.com/smartbot/notification/pkg/client"
 	"github.com/smartbot/notification/pkg/errors"
 )
 
@@ -17,7 +17,7 @@ type NotificationService struct {
 }
 
 func (ns *NotificationService) SendNotification(req SendNotificationRequest) (*SendNotificationResponse, *errors.ApiError) {
-	db := dbclient.GetCient()
+	db := client.GetMySQLCient().GetDatabase()
 
 	newNotif := database.Notification{
 		ID:      uuid.New(),
