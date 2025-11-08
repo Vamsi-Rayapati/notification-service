@@ -49,5 +49,8 @@ services:
     volumes:
       - ./notification-service:/app
     restart: unless-stopped
+  email:
+    container_name: email-service
+    
 volumes:
   mysql-data:

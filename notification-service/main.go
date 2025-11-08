@@ -16,6 +16,7 @@ func main() {
 
 	mysql := client.GetMySQLCient()
 	db, err := mysql.Connect()
+	client.GetKafkaClient().CreateTopics([]string{"email-notifications", "push-notifications"})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v, %v", err, db)
 		return
