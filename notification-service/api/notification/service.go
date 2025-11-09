@@ -2,8 +2,8 @@ package notification
 
 import (
 	"context"
-	"encoding/json"
 	"log"
+	"slices"
 
 	"github.com/google/uuid"
 	"github.com/segmentio/kafka-go"
@@ -22,20 +22,56 @@ type NotificationService struct {
 func (ns *NotificationService) SendNotification(req SendNotificationRequest) (*SendNotificationResponse, *errors.ApiError) {
 	notificationID := uuid.New()
 	kafkaClient := client.GetKafkaClient()
-	writer := kafkaClient.GetWriter("email-notifications")
+	writer := kafkaClient.GetWriter()
 	defer writer.Close()
 
-	bytePayload, err := json.Marshal(req.Payload)
-	if err != nil {
-		return nil, errors.InternalServerError("Failed to parse payload")
+	var msgs []kafka.Message = []kafka.Message{}
+	var notifications []database.Notification = []database.Notification{}
+
+	if slices.Contains(req.Channels, "email") {
+		emailPayload, err := getEmailKafkaPayload(req)
+
+		if err != nil {
+			return nil, errors.InternalServerError("Failed to parse payload")
+		}
+
+		msgs = append(msgs, kafka.Message{
+			Topic: "email-notifications",
+			Key:   []byte(notificationID.String()),
+			Value: emailPayload,
+		})
+
+		notifications = append(notifications, database.Notification{
+			ID:      notificationID,
+			UserID:  req.SenderID, // req.SenderID,
+			Channel: "email",
+			Status:  database.NotificationSending,
+		})
 	}
 
-	err = writer.WriteMessages(context.Background(),
-		kafka.Message{
+	if slices.Contains(req.Channels, "push") {
+		emailPayload, err := getEmailKafkaPayload(req)
+
+		if err != nil {
+			return nil, errors.InternalServerError("Failed to parse payload")
+		}
+
+		msgs = append(msgs, kafka.Message{
+			Topic: "push-notifications",
 			Key:   []byte(notificationID.String()),
-			Value: bytePayload,
-		},
-	)
+			Value: emailPayload,
+		})
+
+		notifications = append(notifications, database.Notification{
+			ID:      notificationID,
+			UserID:  req.SenderID, // req.SenderID,
+			Channel: "push",
+			Status:  database.NotificationSending,
+		})
+
+	}
+
+	err := writer.WriteMessages(context.Background(), msgs...)
 
 	if err != nil {
 		log.Println("failed to write messages:", err)
@@ -44,18 +80,11 @@ func (ns *NotificationService) SendNotification(req SendNotificationRequest) (*S
 
 	db := client.GetMySQLCient().GetDatabase()
 
-	newNotif := database.Notification{
-		ID:      notificationID,
-		UserID:  req.SenderID, // req.SenderID,
-		Channel: req.Channel,
-		Status:  database.NotificationSending,
-	}
-
-	result := db.Create(&newNotif)
+	result := db.Create(&notifications)
 	if result.Error != nil {
 		return nil, errors.InternalServerError("Failed to create product")
 	}
 
-	return &SendNotificationResponse{NotificationID: newNotif.ID}, nil
+	return &SendNotificationResponse{NotificationID: notificationID}, nil
 
 }

@@ -1,4 +1,4 @@
-module github.com/smartbot/notification
+module github.com/smartbot/email
 
 go 1.23.5
 

@@ -13,6 +13,7 @@ type NotificationController struct {
 
 func (nc *NotificationController) SendNotification(c *gin.Context) {
 	var req SendNotificationRequest
+
 	err := validator.ValidateBody(c, &req)
 
 	if err != nil {
